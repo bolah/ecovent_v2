@@ -154,19 +154,25 @@ class VentoExpertFan(CoordinatorEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the entity."""
-        if preset_mode is not None:
-            self.set_preset_mode(preset_mode)
-        if percentage is not None:
-            self.set_percentage(percentage)
-        self._fan.set_param("state", "on")
-        await self.coordinator.async_refresh()
-        # self.schedule_update_ha_state()
+        try:
+            if preset_mode is not None:
+                self.set_preset_mode(preset_mode)
+            if percentage is not None:
+                self.set_percentage(percentage)
+            self._fan.set_param("state", "on")
+            await self.coordinator.async_refresh()
+        except Exception as err:
+            _LOGGER.error("Error turning on fan: %s", err)
+            raise
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
-        self._fan.set_param("state", "off")
-        await self.coordinator.async_refresh()
-        # self.schedule_update_ha_state()
+        try:
+            self._fan.set_param("state", "off")
+            await self.coordinator.async_refresh()
+        except Exception as err:
+            _LOGGER.error("Error turning off fan: %s", err)
+            raise
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""

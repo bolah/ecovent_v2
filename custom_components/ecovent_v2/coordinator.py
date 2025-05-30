@@ -49,7 +49,7 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
-            update_method=self._fan.update(),
+            update_method=self._fan.update,
         )
 
     async def _async_update_data(self) -> None:
