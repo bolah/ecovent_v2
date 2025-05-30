@@ -260,6 +260,10 @@ class VentoSensor(CoordinatorEntity, SensorEntity):
         """Get filter time countdown as total hours."""
         remaining_time_str = self._fan.filter_timer_countdown
 
+        if remaining_time_str is None:
+            _LOGGER.warning("Filter timer countdown value is None")
+            return None
+
         # Use regex to extract days, hours, and minutes
         match = re.match(r"(\d+)d (\d+)h (\d+)m", remaining_time_str)
         if match:
@@ -270,6 +274,7 @@ class VentoSensor(CoordinatorEntity, SensorEntity):
             # Convert everything to total hours
             total_hours = days * 24 + hours + minutes / 60
             return total_hours
+        _LOGGER.warning("Could not parse filter timer countdown string: %s", remaining_time_str)
         return None  # In case the string format is unexpected
 
     def machine_hours(self):
