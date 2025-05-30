@@ -19,6 +19,9 @@ from .const import DOMAIN
 from .coordinator import VentoFanDataUpdateCoordinator
 
 import re
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -216,12 +219,26 @@ class VentoSensor(CoordinatorEntity, SensorEntity):
         """Get battery used percentage."""
         high = 3300
         low = 2500
-        if self._fan.battery_voltage is None:
-            voltage = 0
-        else:
-            voltage = int(self._fan.battery_voltage.split()[0])
-            voltage = round(((voltage - low) / (high - low)) * 100)
-        return voltage
+        try:
+            if self._fan.battery_voltage is None:
+                return 0
+            
+            # Handle both string and integer values
+            if isinstance(self._fan.battery_voltage, str):
+                # If it's a string, remove 'mV' and get the number
+                voltage_str = self._fan.battery_voltage.replace(" mV", "").strip()
+                voltage = int(voltage_str)
+            else:
+                # If it's already an integer, use it directly
+                voltage = int(self._fan.battery_voltage)
+            
+            # Calculate percentage
+            percentage = round(((voltage - low) / (high - low)) * 100)
+            # Ensure the value is between 0 and 100
+            return max(0, min(100, percentage))
+        except (ValueError, AttributeError) as err:
+            _LOGGER.error("Error calculating battery percentage: %s", err)
+            return 0
 
     def timer_counter(self):
         """Get timer counter value as total hours."""
