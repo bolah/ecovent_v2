@@ -28,12 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 
 class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
     """Class for Vento Fan Update Coordinator."""
-
+    _config = None
     def __init__(
         self,
         hass: HomeAssistant,
         config: ConfigEntry,
     ) -> None:
+        self._config = config
         """Initialize global Vento data updater."""
         self._fan = Fan(
             config.data[CONF_IP_ADDRESS],
@@ -56,11 +57,14 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
         """Update fan data and return the fan object."""
         try:
             _LOGGER.error("_UPDATE_FAN: Starting fan update")
-            result = self._fan.update()
-            _LOGGER.error("_UPDATE_FAN: Fan update completed, result: %s", result)
-            _LOGGER.error("_UPDATE_FAN: Fan state: %s", self._fan.state)
-            _LOGGER.error("_UPDATE_FAN: Fan speed: %s", self._fan.speed)
-            _LOGGER.error("_UPDATE_FAN: Returning fan object")
+            self._fan = Fan(
+                self.config.data[CONF_IP_ADDRESS],
+                self.config.data[CONF_PASSWORD],
+                self.config.data[CONF_DEVICE_ID],
+                self.config.data[CONF_NAME],
+                self.config.data[CONF_PORT],
+            )
+            self._fan.init_device()
             return self._fan
         except Exception as err:
             _LOGGER.error("_UPDATE_FAN: Error updating fan data: %s", err)
