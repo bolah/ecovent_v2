@@ -164,11 +164,6 @@ class VentoExpertFan(CoordinatorEntity, FanEntity):
             if percentage is not None:
                 self.set_percentage(percentage)
             self._fan.set_param("state", "on")
-            # Force an immediate update
-            await self.coordinator.async_request_refresh()
-            # Wait a bit for the update to complete
-            await asyncio.sleep(1)
-            # Force another update to ensure state is correct
             await self.coordinator.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Error turning on fan: %s", err)
@@ -179,11 +174,6 @@ class VentoExpertFan(CoordinatorEntity, FanEntity):
         try:
             _LOGGER.debug("Turning off fan")
             self._fan.set_param("state", "off")
-            # Force an immediate update
-            await self.coordinator.async_request_refresh()
-            # Wait a bit for the update to complete
-            await asyncio.sleep(1)
-            # Force another update to ensure state is correct
             await self.coordinator.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Error turning off fan: %s", err)
