@@ -39,6 +39,7 @@ class VentoHub:
 
     def __init__(self, host: str, port: int, fan_id: str, name: str) -> None:
         """Initialize."""
+        _LOGGER.error("VENTO_HUB: Initializing with host: %s, port: %s, fan_id: %s, name: %s", host, port, fan_id, name)
         self.host = host
         self.port = port
         self.fan_id = fan_id
@@ -47,11 +48,20 @@ class VentoHub:
 
     async def authenticate(self, password: str) -> bool:
         """Authenticate."""
-        self.fan = Fan(self.host, password, self.fan_id, self.name, self.port)
-        self.fan.init_device()
-        self.fan_id = self.fan.id
-        self.name = self.name + " " + self.fan_id
-        return self.fan.id != "DEFAULT_DEVICEID"
+        _LOGGER.error("VENTO_HUB: Starting authentication with password: %s", password)
+        try:
+            _LOGGER.error("VENTO_HUB: Creating Fan object")
+            self.fan = Fan(self.host, password, self.fan_id, self.name, self.port)
+            _LOGGER.error("VENTO_HUB: Initializing device")
+            self.fan.init_device()
+            _LOGGER.error("VENTO_HUB: Device initialized, fan ID: %s", self.fan.id)
+            self.fan_id = self.fan.id
+            self.name = self.name + " " + self.fan_id
+            _LOGGER.error("VENTO_HUB: Authentication result: %s", self.fan.id != "DEFAULT_DEVICEID")
+            return self.fan.id != "DEFAULT_DEVICEID"
+        except Exception as err:
+            _LOGGER.error("VENTO_HUB: Error during authentication: %s", err)
+            return False
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -59,6 +69,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    _LOGGER.error("VALIDATE_INPUT: Starting validation with data: %s", data)
 
     # If your PyPI package is not built with async, pass your methods
     # to the executor:
@@ -66,20 +77,26 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = VentoHub(
-        data[CONF_IP_ADDRESS], data[CONF_PORT], data[CONF_DEVICE_ID], data[CONF_NAME]
-    )
+    try:
+        _LOGGER.error("VALIDATE_INPUT: Creating VentoHub")
+        hub = VentoHub(
+            data[CONF_IP_ADDRESS], data[CONF_PORT], data[CONF_DEVICE_ID], data[CONF_NAME]
+        )
 
-    if not await hub.authenticate(data[CONF_PASSWORD]):
-        raise InvalidAuth
+        _LOGGER.error("VALIDATE_INPUT: Authenticating hub")
+        if not await hub.authenticate(data[CONF_PASSWORD]):
+            _LOGGER.error("VALIDATE_INPUT: Authentication failed")
+            raise InvalidAuth
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {"title": hub.name, "id": hub.fan_id}
+        _LOGGER.error("VALIDATE_INPUT: Authentication successful, returning info")
+        # Return info that you want to store in the config entry.
+        return {"title": hub.name, "id": hub.fan_id}
+    except InvalidAuth:
+        _LOGGER.error("VALIDATE_INPUT: Invalid authentication")
+        raise
+    except Exception as err:
+        _LOGGER.error("VALIDATE_INPUT: Unexpected error: %s", err)
+        raise
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,6 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialite ConfigFlow."""
+        _LOGGER.error("CONFIG_FLOW: Initializing ConfigFlow")
         self._fan = Fan(
             "<broadcast>", "1111", "DEFAULT_DEVICEID", "Vento Express", 4000
         )
@@ -97,7 +115,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        _LOGGER.error("CONFIG_FLOW: async_step_user called with input: %s", user_input)
+        
         if user_input is None:
+            _LOGGER.error("CONFIG_FLOW: No user input, showing form")
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
@@ -105,39 +126,57 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
+            _LOGGER.error("CONFIG_FLOW: Processing user input: %s", user_input)
             if user_input[CONF_IP_ADDRESS] == "<broadcast>":
+                _LOGGER.error("CONFIG_FLOW: Using broadcast mode to search for devices")
                 ip = None
                 ips = self._fan.search_devices("0.0.0.0")
+                _LOGGER.error("CONFIG_FLOW: Found IPs: %s", ips)
                 # ips = ["10.94.0.105", "10.94.0.106", "10.94.0.107", "10.94.0.108"]
                 unique_ids = []
                 for entry in self._async_current_entries(include_ignore=True):
                     unique_ids.append(entry.unique_id)
+                _LOGGER.error("CONFIG_FLOW: Existing unique IDs: %s", unique_ids)
+                
                 for ip in ips:
+                    _LOGGER.error("CONFIG_FLOW: Trying IP: %s", ip)
                     self._fan.host = ip
                     self._fan.id = user_input[CONF_DEVICE_ID]
                     self._fan.password = user_input[CONF_PASSWORD]
                     self._fan.name = user_input[CONF_NAME]
                     self._fan.port = user_input[CONF_PORT]
                     self._fan.init_device()
+                    _LOGGER.error("CONFIG_FLOW: Device initialized with ID: %s", self._fan.id)
                     if self._fan.id not in unique_ids:
+                        _LOGGER.error("CONFIG_FLOW: Found new device, using IP: %s", ip)
                         user_input[CONF_IP_ADDRESS] = ip
                         break
                 if user_input[CONF_IP_ADDRESS] == "<broadcast>":
+                    _LOGGER.error("CONFIG_FLOW: No new devices found")
                     raise CannotConnect
 
+            _LOGGER.error("CONFIG_FLOW: Validating input")
             info = await validate_input(self.hass, user_input)
+            _LOGGER.error("CONFIG_FLOW: Validation successful, info: %s", info)
+            
             await self.async_set_unique_id(info["id"])
             self._abort_if_unique_id_configured()
+            _LOGGER.error("CONFIG_FLOW: Unique ID set and checked")
+            
         except CannotConnect:
+            _LOGGER.error("CONFIG_FLOW: Cannot connect error")
             errors["base"] = "cannot_connect"
         except InvalidAuth:
+            _LOGGER.error("CONFIG_FLOW: Invalid auth error")
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("CONFIG_FLOW: Unexpected exception")
             errors["base"] = "unknown"
         else:
+            _LOGGER.error("CONFIG_FLOW: Creating entry with title: %s, data: %s", info["title"], user_input)
             return self.async_create_entry(title=info["title"], data=user_input)
 
+        _LOGGER.error("CONFIG_FLOW: Showing form with errors: %s", errors)
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )

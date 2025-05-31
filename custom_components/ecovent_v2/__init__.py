@@ -24,20 +24,32 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EcoVent_v2 from a config entry."""
+    _LOGGER.error("ASYNC_SETUP_ENTRY: Starting setup for entry: %s", entry.entry_id)
+    
+    try:
+        _LOGGER.error("ASYNC_SETUP_ENTRY: Creating coordinator")
+        coordinator = VentoFanDataUpdateCoordinator(
+            hass,
+            entry,
+        )
+        _LOGGER.error("ASYNC_SETUP_ENTRY: Coordinator created successfully")
 
-    coordinator = VentoFanDataUpdateCoordinator(
-        hass,
-        entry,
-    )
+        _LOGGER.error("ASYNC_SETUP_ENTRY: Starting first refresh")
+        await coordinator.async_config_entry_first_refresh()
+        _LOGGER.error("ASYNC_SETUP_ENTRY: First refresh completed")
 
-    await coordinator.async_config_entry_first_refresh()
+        hass.data.setdefault(DOMAIN, {})
+        hass.data[DOMAIN][entry.entry_id] = coordinator
+        _LOGGER.error("ASYNC_SETUP_ENTRY: Coordinator stored in hass.data")
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+        _LOGGER.error("ASYNC_SETUP_ENTRY: Setting up platforms: %s", PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        _LOGGER.error("ASYNC_SETUP_ENTRY: All platforms setup completed")
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
+        return True
+    except Exception as err:
+        _LOGGER.error("ASYNC_SETUP_ENTRY: Error during setup: %s", err)
+        raise
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

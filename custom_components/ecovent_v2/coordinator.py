@@ -55,14 +55,34 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
     def _update_fan(self):
         """Update fan data and return the fan object."""
         try:
-            _LOGGER.error("UPDATE FAN CALLED")
+            _LOGGER.error("_UPDATE_FAN: Starting fan update")
             result = self._fan.update()
-            _LOGGER.error("UPDATE FAN RESULT")
+            _LOGGER.error("_UPDATE_FAN: Fan update completed, result: %s", result)
+            _LOGGER.error("_UPDATE_FAN: Fan state: %s", self._fan.state)
+            _LOGGER.error("_UPDATE_FAN: Fan speed: %s", self._fan.speed)
+            _LOGGER.error("_UPDATE_FAN: Returning fan object")
             return self._fan
         except Exception as err:
-            _LOGGER.error("Error updating fan data: %s", err)
+            _LOGGER.error("_UPDATE_FAN: Error updating fan data: %s", err)
             raise UpdateFailed(f"Error communicating with fan: {err}")
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        return await self.hass.async_add_executor_job(self._update_fan)
+        _LOGGER.error("_ASYNC_UPDATE_DATA: Called")
+        try:
+            result = await self.hass.async_add_executor_job(self._update_fan)
+            _LOGGER.error("_ASYNC_UPDATE_DATA: Executor job completed, result: %s", result)
+            return result
+        except Exception as err:
+            _LOGGER.error("_ASYNC_UPDATE_DATA: Error in async update: %s", err)
+            raise
+
+    async def async_request_refresh(self):
+        """Request a refresh."""
+        _LOGGER.error("ASYNC_REQUEST_REFRESH: Called")
+        try:
+            await super().async_request_refresh()
+            _LOGGER.error("ASYNC_REQUEST_REFRESH: Completed successfully")
+        except Exception as err:
+            _LOGGER.error("ASYNC_REQUEST_REFRESH: Error: %s", err)
+            raise

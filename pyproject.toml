@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "ecovent_v2"
+version = "0.1.0"
+description = "Home Assistant Integration for Blauberg EcoVent VENTO Expert Fans"
+authors = ["Your Name"]
+readme = "README.md"
+packages = [{include = "custom_components/ecovent_v2"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pyecoventv2 = "0.9.23"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

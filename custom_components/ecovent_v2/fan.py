@@ -157,50 +157,68 @@ class VentoExpertFan(CoordinatorEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the entity."""
+        _LOGGER.error("ASYNC_TURN_ON CALLED with percentage: %s, preset_mode: %s", percentage, preset_mode)
         try:
-            _LOGGER.error("Turning on fan with percentage: %s, preset_mode: %s", percentage, preset_mode)
+            _LOGGER.error("ASYNC_TURN_ON: Starting turn on process")
             if preset_mode is not None:
+                _LOGGER.error("ASYNC_TURN_ON: Setting preset mode: %s", preset_mode)
                 self.set_preset_mode(preset_mode)
             if percentage is not None:
+                _LOGGER.error("ASYNC_TURN_ON: Setting percentage: %s", percentage)
                 self.set_percentage(percentage)
+            _LOGGER.error("ASYNC_TURN_ON: Setting fan state to 'on'")
             self._fan.set_param("state", "on")
+            _LOGGER.error("ASYNC_TURN_ON: Requesting coordinator refresh")
             await self.coordinator.async_request_refresh()
+            _LOGGER.error("ASYNC_TURN_ON: Completed successfully")
         except Exception as err:
-            _LOGGER.error("Error turning on fan: %s", err)
+            _LOGGER.error("ASYNC_TURN_ON: Error turning on fan: %s", err)
             raise
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
+        _LOGGER.error("ASYNC_TURN_OFF CALLED")
         try:
-            _LOGGER.debug("Turning off fan")
+            _LOGGER.error("ASYNC_TURN_OFF: Starting turn off process")
+            _LOGGER.error("ASYNC_TURN_OFF: Setting fan state to 'off'")
             self._fan.set_param("state", "off")
+            _LOGGER.error("ASYNC_TURN_OFF: Requesting coordinator refresh")
             await self.coordinator.async_request_refresh()
+            _LOGGER.error("ASYNC_TURN_OFF: Completed successfully")
         except Exception as err:
-            _LOGGER.error("Error turning off fan: %s", err)
+            _LOGGER.error("ASYNC_TURN_OFF: Error turning off fan: %s", err)
             raise
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
+        _LOGGER.error("SET_PRESET_MODE CALLED with: %s", preset_mode)
         if preset_mode in self.preset_modes:
+            _LOGGER.error("SET_PRESET_MODE: Setting fan speed to: %s", preset_mode)
             self._fan.set_param("speed", preset_mode)
             if preset_mode == "manual":
+                _LOGGER.error("SET_PRESET_MODE: Setting manual speed percent to: %s", self.percentage)
                 self._fan.set_man_speed_percent(self.percentage)
         else:
+            _LOGGER.error("SET_PRESET_MODE: Invalid preset mode: %s", preset_mode)
             raise ValueError(f"Invalid preset mode: {preset_mode}")
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
+        _LOGGER.error("ASYNC_SET_PRESET_MODE CALLED with: %s", preset_mode)
         self.set_preset_mode(preset_mode)
         await self.coordinator.async_refresh()
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
+        _LOGGER.error("SET_PERCENTAGE CALLED with: %s", percentage)
         self._percentage = percentage
         if self._fan.speed == "manual":
+            _LOGGER.error("SET_PERCENTAGE: Setting manual speed percent to: %s", percentage)
             self._fan.set_man_speed_percent(percentage)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
+        _LOGGER.error("ASYNC_SET_PERCENTAGE CALLED with: %s", percentage)
         self.set_percentage(percentage)
         await self.coordinator.async_refresh()
 
