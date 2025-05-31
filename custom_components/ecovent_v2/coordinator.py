@@ -48,14 +48,19 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=60),
-            update_method=self._fan.update,
+            update_interval=timedelta(seconds=5),  # More frequent updates
+            update_method=self._update_fan,
         )
 
-    async def _async_update_data(self) -> None:
-        """Fetch data from API endpoint.
+    def _update_fan(self):
+        """Update fan data and return the fan object."""
+        try:
+            self._fan.update()
+            return self._fan
+        except Exception as err:
+            _LOGGER.error("Error updating fan data: %s", err)
+            raise UpdateFailed(f"Error communicating with fan: {err}")
 
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        self._fan.update()
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+        return await self.hass.async_add_executor_job(self._update_fan)

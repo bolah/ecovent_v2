@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+import asyncio
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -155,12 +156,18 @@ class VentoExpertFan(CoordinatorEntity, FanEntity):
     ) -> None:
         """Turn on the entity."""
         try:
+            _LOGGER.debug("Turning on fan with percentage: %s, preset_mode: %s", percentage, preset_mode)
             if preset_mode is not None:
                 self.set_preset_mode(preset_mode)
             if percentage is not None:
                 self.set_percentage(percentage)
             self._fan.set_param("state", "on")
-            await self.coordinator.async_refresh()
+            # Force an immediate update
+            await self.coordinator.async_request_refresh()
+            # Wait a bit for the update to complete
+            await asyncio.sleep(1)
+            # Force another update to ensure state is correct
+            await self.coordinator.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Error turning on fan: %s", err)
             raise
@@ -168,8 +175,14 @@ class VentoExpertFan(CoordinatorEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
         try:
+            _LOGGER.debug("Turning off fan")
             self._fan.set_param("state", "off")
-            await self.coordinator.async_refresh()
+            # Force an immediate update
+            await self.coordinator.async_request_refresh()
+            # Wait a bit for the update to complete
+            await asyncio.sleep(1)
+            # Force another update to ensure state is correct
+            await self.coordinator.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Error turning off fan: %s", err)
             raise
