@@ -55,7 +55,9 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
     def _update_fan(self):
         """Update fan data and return the fan object."""
         try:
-            self._fan.update()
+            _LOGGER.error("UPDATE FAN CALLED")
+            result = self._fan.update()
+            _LOGGER.error("UPDATE FAN RESULT")
             return self._fan
         except Exception as err:
             _LOGGER.error("Error updating fan data: %s", err)

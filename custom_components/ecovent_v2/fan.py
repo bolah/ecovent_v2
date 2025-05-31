@@ -158,7 +158,7 @@ class VentoExpertFan(CoordinatorEntity, FanEntity):
     ) -> None:
         """Turn on the entity."""
         try:
-            _LOGGER.debug("Turning on fan with percentage: %s, preset_mode: %s", percentage, preset_mode)
+            _LOGGER.error("Turning on fan with percentage: %s, preset_mode: %s", percentage, preset_mode)
             if preset_mode is not None:
                 self.set_preset_mode(preset_mode)
             if percentage is not None:
