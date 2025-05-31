@@ -28,7 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
     """Class for Vento Fan Update Coordinator."""
-    _config = None
     def __init__(
         self,
         hass: HomeAssistant,
