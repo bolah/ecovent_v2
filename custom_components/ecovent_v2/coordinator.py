@@ -58,11 +58,11 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             _LOGGER.error("_UPDATE_FAN: Starting fan update")
             self._fan = Fan(
-                self.config.data[CONF_IP_ADDRESS],
-                self.config.data[CONF_PASSWORD],
-                self.config.data[CONF_DEVICE_ID],
-                self.config.data[CONF_NAME],
-                self.config.data[CONF_PORT],
+                self._config.data[CONF_IP_ADDRESS],
+                self._config.data[CONF_PASSWORD],
+                self._config.data[CONF_DEVICE_ID],
+                self._config.data[CONF_NAME],
+                self._config.data[CONF_PORT],
             )
             self._fan.init_device()
             return self._fan
