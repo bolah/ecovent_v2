@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 import asyncio
+import logging
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_ON_PERCENTAGE = 5
 SPEED_RANGE = (1, 3)  # off is not included
