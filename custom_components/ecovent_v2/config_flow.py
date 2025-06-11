@@ -66,6 +66,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
+    _LOGGER.error(
+        "Connecting to VentoHub - IP: %s, Port: %s, Device ID: ****%s, Name: %s",
+        data[CONF_IP_ADDRESS],
+        data[CONF_PORT],
+        data[CONF_DEVICE_ID],  # log only last 4 chars
+        data[CONF_NAME]
+    )
+
     hub = VentoHub(
         data[CONF_IP_ADDRESS], data[CONF_PORT], data[CONF_DEVICE_ID], data[CONF_NAME]
     )
