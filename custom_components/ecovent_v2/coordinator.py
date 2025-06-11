@@ -35,6 +35,8 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
         config: ConfigEntry,
     ) -> None:
         """Initialize global Vento data updater."""
+        self._config = config
+        _LOGGER.error("COORDINATOR.__init__: Creating Fan with config: %s", config.data)
         self._fan = Fan(
             config.data[CONF_IP_ADDRESS],
             config.data[CONF_PASSWORD],
@@ -42,8 +44,10 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
             config.data[CONF_NAME],
             config.data[CONF_PORT],
         )
+        _LOGGER.error("COORDINATOR.__init__: Fan object created: %s", vars(self._fan))
+        _LOGGER.error("COORDINATOR.__init__: Calling init_device() [COORDINATOR]")
         self._fan.init_device()
-
+        _LOGGER.error("COORDINATOR.__init__: Fan after init_device: %s", vars(self._fan))
         super().__init__(
             hass,
             _LOGGER,
@@ -59,3 +63,9 @@ class VentoFanDataUpdateCoordinator(DataUpdateCoordinator):
         so entities can quickly look up their data.
         """
         self._fan.update()
+
+    def _update_fan(self):
+        _LOGGER.error("COORDINATOR._update_fan: About to update fan: %s", vars(self._fan))
+        self._fan.update()
+        _LOGGER.error("COORDINATOR._update_fan: Fan after update: %s", vars(self._fan))
+        return self._fan

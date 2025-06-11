@@ -47,10 +47,16 @@ class VentoHub:
 
     async def authenticate(self, password: str) -> bool:
         """Authenticate."""
+        _LOGGER.error("VENTO_HUB.authenticate: Starting authentication with password: %s", password)
+        _LOGGER.error("VENTO_HUB.authenticate: Creating Fan object with host=%s, password=****, fan_id=%s, name=%s, port=%s", self.host, self.fan_id, self.name, self.port)
         self.fan = Fan(self.host, password, self.fan_id, self.name, self.port)
+        _LOGGER.error("VENTO_HUB.authenticate: Fan object created: %s", vars(self.fan))
+        _LOGGER.error("VENTO_HUB.authenticate: Calling init_device() [1]")
         self.fan.init_device()
+        _LOGGER.error("VENTO_HUB.authenticate: Fan after init_device: %s", vars(self.fan))
         self.fan_id = self.fan.id
         self.name = self.name + " " + self.fan_id
+        _LOGGER.error("VENTO_HUB.authenticate: Authentication result: %s", self.fan.id != "DEFAULT_DEVICEID")
         return self.fan.id != "DEFAULT_DEVICEID"
 
 
@@ -121,13 +127,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for entry in self._async_current_entries(include_ignore=True):
                     unique_ids.append(entry.unique_id)
                 for ip in ips:
+                    _LOGGER.error("CONFIG_FLOW.async_step_user: Trying IP: %s", ip)
                     self._fan.host = ip
                     self._fan.id = user_input[CONF_DEVICE_ID]
                     self._fan.password = user_input[CONF_PASSWORD]
                     self._fan.name = user_input[CONF_NAME]
                     self._fan.port = user_input[CONF_PORT]
+                    _LOGGER.error("CONFIG_FLOW.async_step_user: Fan before init_device: %s", vars(self._fan))
+                    _LOGGER.error("CONFIG_FLOW.async_step_user: Calling init_device() [2]")
                     self._fan.init_device()
+                    _LOGGER.error("CONFIG_FLOW.async_step_user: Fan after init_device: %s", vars(self._fan))
                     if self._fan.id not in unique_ids:
+                        _LOGGER.error("CONFIG_FLOW.async_step_user: Found new device, using IP: %s", ip)
                         user_input[CONF_IP_ADDRESS] = ip
                         break
                 if user_input[CONF_IP_ADDRESS] == "<broadcast>":
